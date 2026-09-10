@@ -5,3 +5,6 @@ build/
 .env.local
 *.log
 .DS_Store
+dev_box/.vagrant/
+dev_box/nightly-*.log
+dev_box/cron-stderr.log

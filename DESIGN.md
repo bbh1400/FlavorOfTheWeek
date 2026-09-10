@@ -83,10 +83,31 @@ Do not start Special #2 until #1 is fully playable end-to-end (including
 returning to the Table cleanly). Depth over breadth — one great rotation
 beats three half-built ones.
 
-## Art bible (code-only pipeline)
-- **Geometry:** primitives only — `SphereGeometry`, `CapsuleGeometry`,
-  `ConeGeometry`, `BoxGeometry`, `CylinderGeometry`, boolean-free. Compose
-  props (table, benches, board, minigame set pieces) from these.
+## Art bible
+The style below is the actual constraint (low-poly, flat/toon-shaded,
+primitive-derived silhouettes) — it exists because it's buildable by an
+unattended pipeline, not because everything must literally be
+in-code geometry. Both production paths are fully allowed and can be
+mixed freely:
+- **Code-built primitives** — `SphereGeometry`, `CapsuleGeometry`,
+  `ConeGeometry`, `BoxGeometry`, `CylinderGeometry`, boolean-free,
+  composed directly in the client (as the Table/Avatar already are).
+  Fastest path, zero asset pipeline, best for anything simple or that
+  needs to vary a lot at runtime (avatar colors/hats, procedural set
+  dressing).
+- **Blender-authored models** — headless Blender (`blender --background
+  --python script.py`) is available in the nightly VM and is fully
+  approved for building actual models, exported as glTF and loaded via
+  `@react-three/drei`'s `useGLTF`. Reach for this for anything that would
+  be awkward or ugly as pure primitives (more detailed props, a
+  recognizable dish/food model for a Special, a hero prop for the
+  Specials Board). Keep exported models low-poly and flat/toon-shaded to
+  match the primitive-built pieces — same silhouette rules apply
+  regardless of which path built the mesh (see shading below). Store
+  authoring scripts under `art/blender/` (not committed binary .blend
+  files where avoidable — a Python script that builds and exports the
+  model is easier to review, tweak, and re-run than a binary blob) and
+  exported output under `client/public/models/`.
 - **Shading:** flat/toon look — `MeshToonMaterial` or `MeshStandardMaterial`
   with low `roughness`/no smooth-shading (`flatShading: true`) plus a cheap
   inverted-hull outline (backface-culled slightly-scaled dark duplicate mesh)

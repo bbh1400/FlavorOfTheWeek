@@ -1,17 +1,19 @@
 import { Outlines } from "@react-three/drei";
 import { palette } from "@potluck/shared";
 import { Avatar } from "../components/Avatar";
+import { LocalAvatarController } from "../components/LocalAvatarController";
+import { SpecialsBoard } from "../components/SpecialsBoard";
+import type { RosterEntry } from "../net/useLobby";
+import type { MovementVector } from "../hooks/useMovementInput";
 
-// Phase 0 static scene: proves the art style + tech stack before any
-// networking exists. See TASKS.md Phase 1 — these 3 hardcoded avatars get
-// replaced by ones driven by real Colyseus room state.
-const SAMPLE_PLAYERS = [
-  { color: palette.avatarColors[0], position: [-1.4, 0, 1.6] as [number, number, number], hat: 1 },
-  { color: palette.avatarColors[3], position: [1.6, 0, 1.4] as [number, number, number], hat: 2 },
-  { color: palette.avatarColors[5], position: [0, 0, -1.8] as [number, number, number], hat: 1 },
-];
+interface TableProps {
+  roster: RosterEntry[];
+  getInput: () => MovementVector;
+  onLocalMove: (x: number, z: number) => void;
+  bubbles: Record<string, string>;
+}
 
-export function Table() {
+export function Table({ roster, getInput, onLocalMove, bubbles }: TableProps) {
   return (
     <group>
       {/* floor */}
@@ -47,22 +49,29 @@ export function Table() {
         </mesh>
       ))}
 
-      {/* specials board */}
-      <group position={[0, 1.6, -4.2]}>
-        <mesh castShadow>
-          <boxGeometry args={[2.4, 1.6, 0.12]} />
-          <meshStandardMaterial color={palette.boardGreen} flatShading />
-          <Outlines thickness={0.035} color={palette.outline} />
-        </mesh>
-        <mesh position={[0, -1.05, 0]} castShadow>
-          <boxGeometry args={[0.15, 0.9, 0.15]} />
-          <meshStandardMaterial color={palette.tableWoodDark} flatShading />
-        </mesh>
-      </group>
+      <SpecialsBoard />
 
-      {SAMPLE_PLAYERS.map((p, i) => (
-        <Avatar key={i} position={p.position} color={p.color} hat={p.hat} bobOffset={i} />
-      ))}
+      {roster.map((entry, i) =>
+        entry.isSelf ? (
+          <LocalAvatarController
+            key={entry.sessionId}
+            entry={entry}
+            getInput={getInput}
+            onMove={onLocalMove}
+            bubbleText={bubbles[entry.sessionId]}
+          />
+        ) : (
+          <Avatar
+            key={entry.sessionId}
+            positionRef={entry.positionRef}
+            color={entry.color}
+            hat={entry.hat}
+            name={entry.name}
+            bubbleText={bubbles[entry.sessionId]}
+            bobOffset={i}
+          />
+        )
+      )}
     </group>
   );
 }

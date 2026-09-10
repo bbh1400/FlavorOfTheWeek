@@ -35,34 +35,45 @@ happened). Then come back here.
 - [x] `shared`: palette constants, `Player` type, empty `SPECIALS` registry
 
 ## Phase 1 — Make the Table actually multiplayer
-- [ ] Client connects to the Colyseus server on load; joining/creating a
+- [x] Client connects to the Colyseus server on load; joining/creating a
       room actually works end-to-end (host gets a real room code, a
       second browser tab/client can join with it)
-- [ ] `LobbyRoom` state: list of players (id, name, chosen color/hat,
+- [x] `LobbyRoom` state: list of players (id, name, chosen color/hat,
       position). Broadcast joins/leaves.
-- [ ] Render one avatar per connected player at the Table, driven by real
+- [x] Render one avatar per connected player at the Table, driven by real
       room state (not the static sample avatars from Phase 0 — remove
       those once real ones work)
-- [ ] Name entry + avatar color/hat picker UI before entering the Table
-- [ ] Basic movement: WASD/arrow keys (and on-screen touch stick for
+- [x] Name entry + avatar color/hat picker UI before entering the Table
+- [x] Basic movement: WASD/arrow keys (and on-screen touch stick for
       mobile) moves your avatar; position synced to the room and rendered
       for everyone else with simple lerp smoothing
-- [ ] Text chat: a chat box + chat bubbles that appear above the sending
+- [x] Text chat: a chat box + chat bubbles that appear above the sending
       avatar for a few seconds
 
 ## Phase 2 — Specials plumbing
-- [ ] Define the `Special` module contract in `shared` (metadata shape:
+- [x] Define the `Special` module contract in `shared` (metadata shape:
       id, name, min/max players, est. duration, pitch, accent color) per
-      DESIGN.md's registry description
-- [ ] Specials Board prop at the Table renders whatever's in the registry
-      (even with zero real Specials yet, it should show "Coming soon")
+      DESIGN.md's registry description — already existed from Phase 0
+      (`shared/src/specials.ts`'s `SpecialMeta` + empty `SPECIALS` array),
+      shape matches DESIGN.md's registry description.
+- [x] Specials Board prop at the Table renders whatever's in the registry
+      (even with zero real Specials yet, it should show "Coming soon") —
+      `client/src/components/SpecialsBoard.tsx`, maps `SPECIALS` to a list
+      or a "Coming soon..." placeholder via a `Html` label on the board
+      face. Verified in a real Chrome screenshot.
 - [ ] Host-only "Start Special" flow: host picks from available Specials,
       server transitions the room (or hands off to a sub-room) into
       "in-special" state, all clients swap their rendered scene
-      accordingly
+      accordingly. **Deferred to Phase 3** — with `SPECIALS` still empty
+      there's nothing real to select or transition to yet, and building the
+      state machine speculatively risks dead/untestable code. Build this
+      alongside Recipe Roulette instead, once there's a concrete Special to
+      wire it to. Needs: a `hostSessionId` concept on `LobbyRoom` (first
+      joiner = host, reassign on host leave) — not built yet, do this first.
 - [ ] Clean return-to-Table flow after a Special ends (this is explicitly
       called out in DESIGN.md as part of "fully playable end-to-end" —
-      don't skip it)
+      don't skip it). **Deferred to Phase 3** alongside the item above, for
+      the same reason.
 
 ## Phase 3 — Special #1: Recipe Roulette
 - [ ] Server-side round/timer/prompt/voting state machine for Recipe

@@ -1,0 +1,40 @@
+# Potluck nightly-build VM.
+#
+# Persistent dev box the nightly cron job runs an unattended Claude Code
+# session inside, so overnight automation happens in an isolated guest
+# instead of directly on the host. See dev_box/README.md for the full
+# setup (deploy key, credentials, crontab) and dev_box/run_nightly.sh for
+# what actually gets invoked each night.
+#
+# Deliberately NOT destroyed/rebuilt each night (chosen: persistent
+# lifecycle) — `vagrant up` / `vagrant halt` bracket each run instead.
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/jammy64"
+  config.vm.hostname = "potluck-nightly"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "potluck-nightly"
+    vb.memory = 4096
+    vb.cpus = 2
+  end
+
+  # The whole repo (this file's parent directory), shared into the guest.
+  # This is the actual continuity mechanism between nights — the guest
+  # writes files here and the host sees them immediately (no git push
+  # involved). The user reviews and commits/pushes from the host
+  # themselves each morning; the nightly agent never touches git commit
+  # or git push.
+  config.vm.synced_folder "..", "/home/vagrant/potluck"
+
+  # Deploy key + git identity, copied in from the host (never committed to
+  # the repo — see dev_box/README.md for where these live on the host).
+  # Reuses the host's existing Claude Code login (chosen over an API key)
+  # so the unattended session doesn't need its own credential. See
+  # dev_box/README.md for the caveats (may need re-copying if it expires).
+  config.vm.provision "file",
+    source: "~/.claude/.credentials.json",
+    destination: "/home/vagrant/.claude/.credentials.json"
+
+  config.vm.provision "shell", path: "./provision.sh"
+end
